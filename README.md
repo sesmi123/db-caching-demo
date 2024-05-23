@@ -39,3 +39,8 @@ A simple demo of different database caching strategies using Angular, Flask and 
     ```
 
 
+## Database Caching Strategies
+
+### Cache Aside
+
+![](./static/images/cache-aside.JPG)
