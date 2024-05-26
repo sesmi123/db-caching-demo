@@ -47,15 +47,9 @@ class APIController:
         item = Item(name=data['name'], description=data['description'])
         self.db.session.add(item)
         self.db.session.commit()
-        # Invalidate cache or add to cache
+        # Optional: Invalidate cache
         self.cache.delete(data['name'])
         self.logger.info("write-around ==> add_item: Cache invalidated!")
-        # OR
-        # Note: If the data is accessed very frequently and the overhead of regenerating the data in the cache is significant,
-        # it may be better to update the cache with the new data. However, this could slow down the write operation and is not
-        # suitable for write-intensive applications.
-        # self.cache.set(data['name'], json.dumps({'name': item.name, 'description': item.description}))
-        # self.logger.info("write-around ==> add_item: Cache updated!")
         return {'message': 'Item added'}, 201
     
 
@@ -64,10 +58,8 @@ class APIController:
         if item:
             item.description = data['description']
             self.db.session.commit()
-            # Invalidate cache or add to cache
+            # Invalidate cache
             self.cache.delete(data['name'])
             self.logger.info("write-around ==> update_item: Cache invalidated!")
-            # self.cache.setex(data['name'], 3600, json.dumps({'name': item.name, 'description': item.description}))
-            # self.logger.info("write-around ==> update_item: Cache updated!")
             return {'message': 'Item updated'}, 200
         return {'error': 'Item not found'}, 404
