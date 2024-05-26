@@ -1,5 +1,4 @@
 import json
-from models import Item
 
 
 class CacheAside:
@@ -13,16 +12,8 @@ class CacheAside:
         if cached_item:
             self.logger.info("cache-aside ==> get_item: Cache hit!")
             return json.loads(cached_item)
-
-        # Cache miss, query database
-        self.logger.info("cache-aside ==> get_item: Cache miss!")
-        item = Item.query.filter_by(name=name).first()
-        
-        # update cache
-        if item:
-            # cahce for 1 hour
-            self.cache.setex(name, 3600, json.dumps({'name': item.name, 'description': item.description}))
-            self.logger.info("cache-aside ==> get_item: Cache updated!")
-            return {'name': item.name, 'description': item.description}
         
         return None
+    
+    def set_data(self, key, data):
+        self.cache.setex(key, 3600, data)
