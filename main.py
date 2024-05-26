@@ -36,16 +36,16 @@ def get_item_ca(name):
     body, status = ctrlr.cache_aside_get_item(name)
     return jsonify(body), status
 
-@app.route('/write-around/item', methods=['POST'])
-def add_item():
+@app.route('/write-through/item', methods=['POST'])
+def add_item_wt():
     data = request.json
-    body, status = ctrlr.add_item(data)
+    body, status = ctrlr.add_item_wt(data)
     return jsonify(body), status
 
-@app.route('/write-around/item', methods=['PUT'])
-def update_item():
+@app.route('/write-around/item', methods=['POST'])
+def add_item_wa():
     data = request.json
-    body, status = ctrlr.update_item(data)
+    body, status = ctrlr.add_item_wa(data)
     return jsonify(body), status
 
 

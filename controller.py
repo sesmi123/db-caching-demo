@@ -1,7 +1,8 @@
 
-import json
-from models import Item
+from cache_aside import CacheAside
 from read_through_cache import ReadThroughCache
+from write_around_cache import WriteAroundCache
+from write_through_cache import WriteThroughCache
 
 
 
@@ -11,7 +12,10 @@ class APIController:
         self.db = db
         self.cache = cache
         self.logger = logger
+        self.cac = CacheAside(cache, logger)
         self.rtc = ReadThroughCache(cache, logger)
+        self.wtc = WriteThroughCache(db, cache, logger)
+        self.wac = WriteAroundCache(db, cache, logger)
 
 
     def read_through_get_item(self, name):
@@ -21,45 +25,18 @@ class APIController:
         return {'error': 'Item not found'}, 404
 
     def cache_aside_get_item(self, name):
-        # Check cache first
-        cached_item = self.cache.get(name)
-        if cached_item:
-            self.logger.info("cache-aside ==> get_item: Cache hit!")
-            return json.loads(cached_item), 200
-
-        # Cache miss, query database
-        self.logger.info("cache-aside ==> get_item: Cache miss!")
-        item = Item.query.filter_by(name=name).first()
-        
-        # update cache
+        item = self.cac.get_data(name)
         if item:
-            # cahce for 1 hour
-            self.cache.setex(name, 3600, json.dumps({'name': item.name, 'description': item.description}))
-            self.logger.info("cache-aside ==> get_item: Cache updated!")
-            return {'name': item.name, 'description': item.description}, 200
+            return item, 200
         return {'error': 'Item not found'}, 404
     
 
-    def add_item(self, data):
-        # Write-Around: Write directly to the database and invalidate the cache entry
-        # This particular strategy is going to be most performant in instances where data is only written once and not updated.
-        # The data is read very infrequently or not at all.
-        item = Item(name=data['name'], description=data['description'])
-        self.db.session.add(item)
-        self.db.session.commit()
-        # Optional: Invalidate cache
-        self.cache.delete(data['name'])
-        self.logger.info("write-around ==> add_item: Cache invalidated!")
+    def add_item_wt(self, data):
+        self.wtc.add_data(data)
         return {'message': 'Item added'}, 201
-    
 
-    def update_item(self, data):
-        item = Item.query.filter_by(name=data['name']).first()
-        if item:
-            item.description = data['description']
-            self.db.session.commit()
-            # Invalidate cache
-            self.cache.delete(data['name'])
-            self.logger.info("write-around ==> update_item: Cache invalidated!")
-            return {'message': 'Item updated'}, 200
-        return {'error': 'Item not found'}, 404
+    def add_item_wa(self, data):
+        self.wac.add_data(data)
+        return {'message': 'Item added'}, 201
+        
+    
