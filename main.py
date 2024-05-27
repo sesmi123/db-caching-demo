@@ -3,6 +3,7 @@ import redis
 import logging
 from models import db
 from controller import APIController
+from rabbitmq import RabbitMQ
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -19,12 +20,14 @@ redis_db = 5
 cache = redis.Redis(host=redis_host, port=redis_port, db=redis_db, decode_responses=True)
 logging.info(f"Using redis database db{redis_db} running at {redis_host}:{redis_port} as cache")
 
+queue = RabbitMQ('localhost', 5672, '/', 'wb_queue')
+
 # Initialize database within application context
 with app.app_context():
     db.create_all()
     logging.info("main: Database initialized")
 
-ctrlr = APIController(db, cache, logging)
+ctrlr = APIController(db, cache, queue, logging)
 
 @app.route('/read-through/item/<name>', methods=['GET'])
 def get_item_rt(name):
@@ -46,6 +49,12 @@ def add_item_wt():
 def add_item_wa():
     data = request.json
     body, status = ctrlr.add_item_wa(data)
+    return jsonify(body), status
+
+@app.route('/write-back/item', methods=['POST'])
+def add_item_wb():
+    data = request.json
+    body, status = ctrlr.add_item_wb(data)
     return jsonify(body), status
 
 

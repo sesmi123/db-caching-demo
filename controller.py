@@ -4,20 +4,22 @@ from cache_aside import CacheAside
 from models import Item
 from read_through_cache import ReadThroughCache
 from write_around_cache import WriteAroundCache
+from write_back_cache import WriteBackCache
 from write_through_cache import WriteThroughCache
-
 
 
 class APIController:
 
-    def __init__(self, db, cache, logger):
+    def __init__(self, db, cache, queue, logger):
         self.db = db
         self.cache = cache
+        self.queue = queue
         self.logger = logger
         self.cac = CacheAside(cache, logger)
         self.rtc = ReadThroughCache(cache, logger)
         self.wtc = WriteThroughCache(db, cache, logger)
         self.wac = WriteAroundCache(db, cache, logger)
+        self.wbc = WriteBackCache(cache, queue, logger)
 
 
     def read_through_get_item(self, name):
@@ -52,6 +54,10 @@ class APIController:
 
     def add_item_wa(self, data):
         self.wac.add_data(data)
+        return {'message': 'Item added'}, 201
+
+    def add_item_wb(self, data):
+        self.wbc.add_data(data)
         return {'message': 'Item added'}, 201
         
     

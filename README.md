@@ -52,11 +52,11 @@ A simple demo of different database caching strategies using Angular, Flask and 
 
 ### Write-Around
 
-Using the write-around policy, data is written only to the backing store without writing to the cache. 
+Using the write-around policy, data is written only to the database without writing to the cache. 
 
 Good for not flooding the cache with data that may not subsequently be re-read.
 
-Reading recently written data will result in a cache miss (and so a higher latency) because the data can only be read from the slower backing store.
+Reading recently written data will result in a cache miss (and so a higher latency) because the data can only be read from the slower database.
 
 The write-around policy is good for applications that don’t frequently re-read recently written data. This will result in lower write latency but higher read latency which is a acceptable trade-off for these scenarios.
 
@@ -64,7 +64,7 @@ The write-around policy is good for applications that don’t frequently re-read
 
 ### Write-Through
 
-Using the write-through policy, data is written to the cache and the backing store location at the same time. The significance here is not the order in which it happens or whether it happens in parallel. The significance is that I/O completion is only confirmed once the data has been written to both places.
+Using the write-through policy, data is written to the cache and the database location at the same time. The significance here is not the order in which it happens or whether it happens in parallel. The significance is that I/O completion is only confirmed once the data has been written to both places.
 
 Ensures fast retrieval while making sure the data is in the database and is not lost in case the cache is disrupted.
 
@@ -77,7 +77,7 @@ The write-through policy is good for applications that write and then re-read da
 
 ### Write-Back (Write-Behind)
 
-Using the write-back policy, data is written to the cache and Then I/O completion is confirmed. The data is then typically also written to the backing store in the background but the completion confirmation is not blocked on that.
+Using the write-back policy, data is written to the cache and Then I/O completion is confirmed. The data is then typically also written to the database in the background but the completion confirmation is not blocked on that.
 
 This method can greatly enhance performance for write-heavy applications because it reduces the number of write operations performed on the slower back-end storage. However, it introduces a risk of data loss if the cache data is not yet persisted and a system failure occurs.
 
@@ -86,4 +86,5 @@ This method can greatly enhance performance for write-heavy applications because
 ## Cache Eviction Strategies
 
 Least Recently Used (LRU)
+
 Time to Live (TTL)
